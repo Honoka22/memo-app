@@ -1,9 +1,28 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import axios from 'axios';
 import PlusSvg from './svgs/PlusSvg.vue';
 
 const memoText = ref<string>('');
 const isButtonEnabled = computed(() => memoText.value.trim().length > 0);
+// 保存処理（LaravelのAPIへ送信）
+const saveMemo = async () => {
+    if (!isButtonEnabled.value) return;
+
+    try {
+        // Laravelの routes/api.php で設定したURLへPOST送信
+        await axios.post('/api/memos', {
+            content: memoText.value
+        });
+
+        // 成功したら入力欄を空にする
+        memoText.value = '';
+        alert('メモを保存しました！');
+    } catch (error) {
+        console.error('保存に失敗しました:', error);
+        alert('保存中にエラーが発生しました。');
+    }
+};
 </script>
 
 
@@ -16,12 +35,14 @@ const isButtonEnabled = computed(() => memoText.value.trim().length > 0);
 
         <textarea
             v-model="memoText"
+            @keydown.enter.prevent="saveMemo"
             placeholder="メモを入力してください...&#13;&#10;(Enterで保存、Shift+Enterで改行)"
             class="w-full h-32 p-4 border rounded-md resize-none focus:outline-none transition-colors"
             :class="isButtonEnabled ? 'border-pink-300' : 'border-gray-200 bg-gray-50'"
         ></textarea>
 
         <button
+            @click="saveMemo"
             :disabled="!isButtonEnabled"
             class="w-full mt-4 py-3 flex items-center justify-center gap-2 rounded-full text-white font-medium transition-all"
             :class="isButtonEnabled
